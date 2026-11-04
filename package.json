@@ -1,0 +1,9 @@
+{
+  "name": "bratva35",
+  "private": true,
+  "version": "1.1.0",
+  "scripts": {
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  }
+}
