@@ -17,6 +17,30 @@ const API =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
+const CHANNELS = [
+  {
+    id: 'main',
+    name: 'ОСНОВНОЙ',
+    description: 'Общение и разговоры',
+    icon: '🎙️',
+    tag: 'ОБЩИЙ КАНАЛ'
+  },
+  {
+    id: 'dota2',
+    name: 'DOTA 2',
+    description: 'Игры, катки и тактика',
+    icon: '🎮',
+    tag: 'ИГРОВОЙ КАНАЛ'
+  },
+  {
+    id: 'chill',
+    name: 'ОТДЫХ',
+    description: 'Свободное общение',
+    icon: '🌙',
+    tag: 'RELAX'
+  }
+];
+
 function AudioSettings() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
@@ -36,7 +60,6 @@ function AudioSettings() {
       const publication = localParticipant.getTrackPublication(
         Track.Source.Microphone
       );
-
       const track = publication?.audioTrack;
 
       if (!track) {
@@ -104,7 +127,6 @@ function AudioSettings() {
     };
 
     updateSpeakers();
-
     room.on('trackSubscribed', updateSpeakers);
 
     return () => {
@@ -127,8 +149,7 @@ function AudioSettings() {
 
       <label className="audio-slider">
         <span>
-          Громкость микрофона
-          <b>{micVolume}%</b>
+          Громкость микрофона <b>{micVolume}%</b>
         </span>
         <input
           type="range"
@@ -141,8 +162,7 @@ function AudioSettings() {
 
       <label className="audio-slider">
         <span>
-          Громкость собеседников
-          <b>{speakerVolume}%</b>
+          Громкость собеседников <b>{speakerVolume}%</b>
         </span>
         <input
           type="range"
@@ -162,7 +182,7 @@ function AudioSettings() {
   );
 }
 
-function RoomView({ onLeave }) {
+function RoomView({ onLeave, channelName }) {
   return (
     <section className="room">
       <div className="roomtop">
@@ -170,7 +190,6 @@ function RoomView({ onLeave }) {
           <span className="live"></span>
           ГОЛОСОВАЯ КОМНАТА
         </div>
-
         <button className="quiet" onClick={onLeave}>
           Покинуть
         </button>
@@ -178,8 +197,8 @@ function RoomView({ onLeave }) {
 
       <div className="room-content">
         <h2>БРАТВА 35</h2>
-        <p>Ты находишься в голосовой комнате.</p>
-        <p>Подключай микрофон и общайся с братвой!</p>
+        <p>Канал: {channelName}</p>
+        <p>Ты на связи со своей компанией!</p>
       </div>
 
       <AudioSettings />
@@ -194,7 +213,6 @@ function RoomView({ onLeave }) {
             leave: false
           }}
         />
-
         <button className="leave" onClick={onLeave}>
           Выйти из комнаты
         </button>
@@ -206,14 +224,28 @@ function RoomView({ onLeave }) {
 function App() {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('main');
+  const [customRoom, setCustomRoom] = useState('');
+  const [customMode, setCustomMode] = useState(false);
   const [connection, setConnection] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  const selectedChannel = CHANNELS.find(item => item.id === room);
 
   async function join(e) {
     e.preventDefault();
     setBusy(true);
     setError('');
+
+    const finalRoom = customMode
+      ? customRoom.trim().toLowerCase()
+      : room;
+
+    if (!finalRoom) {
+      setError('Введи название комнаты.');
+      setBusy(false);
+      return;
+    }
 
     try {
       const r = await fetch(`${API}/token`, {
@@ -221,7 +253,10 @@ function App() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, room })
+        body: JSON.stringify({
+          name,
+          room: finalRoom
+        })
       });
 
       const data = await r.json();
@@ -230,7 +265,12 @@ function App() {
         throw new Error(data.error || 'Не удалось подключиться');
       }
 
-      setConnection(data);
+      setConnection({
+        ...data,
+        channelName: customMode
+          ? finalRoom
+          : selectedChannel?.name || finalRoom
+      });
     } catch (err) {
       setError(err.message || 'Ошибка подключения');
     } finally {
@@ -252,9 +292,7 @@ function App() {
 
         <div>
           <div className="brand">БРАТВА 35</div>
-          <div className="sub">
-            СВОЯ ВОЛНА. СВОИ ЛЮДИ.
-          </div>
+          <div className="sub">СВОЯ ВОЛНА. СВОИ ЛЮДИ.</div>
         </div>
 
         <div className="status">
@@ -275,9 +313,8 @@ function App() {
           </h1>
 
           <p className="intro">
-            Залетай в комнату, подключай микрофон
-            и общайся с кентами хоть с компьютера,
-            хоть с iPhone.
+            Выбирай канал, подключай микрофон
+            и общайся со своей компанией.
           </p>
 
           <form onSubmit={join} className="joincard">
@@ -292,18 +329,84 @@ function App() {
               />
             </label>
 
-            <label>
-              КОМНАТА
-              <input
-                value={room}
-                onChange={e => setRoom(e.target.value)}
-                placeholder="main"
-                maxLength="40"
-                required
-              />
-            </label>
+            <div className="channel-heading">
+              ВЫБЕРИ ГОЛОСОВОЙ КАНАЛ
+            </div>
 
-            <button disabled={busy} className="join">
+            <div className="channel-grid">
+              {CHANNELS.map(channel => (
+                <button
+                  type="button"
+                  key={channel.id}
+                  className={`channel-card ${
+                    !customMode && room === channel.id
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    setRoom(channel.id);
+                    setCustomMode(false);
+                    setError('');
+                  }}
+                >
+                  <span className="channel-icon">
+                    {channel.icon}
+                  </span>
+                  <span className="channel-tag">
+                    {channel.tag}
+                  </span>
+                  <strong>{channel.name}</strong>
+                  <span className="channel-description">
+                    {channel.description}
+                  </span>
+                  <span className="channel-choice">
+                    {!customMode && room === channel.id
+                      ? '✓ ВЫБРАН'
+                      : 'ВЫБРАТЬ'}
+                  </span>
+                </button>
+              ))}
+
+              <button
+                type="button"
+                className={`channel-card custom-card ${
+                  customMode ? 'selected' : ''
+                }`}
+                onClick={() => {
+                  setCustomMode(true);
+                  setError('');
+                }}
+              >
+                <span className="channel-icon">＋</span>
+                <span className="channel-tag">СВОЯ КОМНАТА</span>
+                <strong>СОЗДАТЬ</strong>
+                <span className="channel-description">
+                  Назови комнату сам
+                </span>
+                <span className="channel-choice">
+                  {customMode ? '✓ ВЫБРАНО' : 'ВЫБРАТЬ'}
+                </span>
+              </button>
+            </div>
+
+            {customMode && (
+              <label>
+                НАЗВАНИЕ ТВОЕЙ КОМНАТЫ
+                <input
+                  value={customRoom}
+                  onChange={e => setCustomRoom(e.target.value)}
+                  placeholder="Например, friends"
+                  maxLength="40"
+                  required
+                />
+              </label>
+            )}
+
+            <button
+              disabled={busy}
+              className="join"
+              type="submit"
+            >
               {busy ? 'ПОДКЛЮЧАЕМ...' : 'ВОЙТИ В ГОЛОС'}
               <b>↗</b>
             </button>
@@ -313,7 +416,7 @@ function App() {
 
           <div className="features">
             <span>● ГОЛОС В РЕАЛЬНОМ ВРЕМЕНИ</span>
-            <span>● КОМНАТЫ ПО НАЗВАНИЮ</span>
+            <span>● НЕСКОЛЬКО КАНАЛОВ</span>
             <span>● ПК + IPHONE</span>
           </div>
         </section>
@@ -345,7 +448,10 @@ function App() {
             setError('Ошибка микрофона: ' + failure);
           }}
         >
-          <RoomView onLeave={leaveRoom} />
+          <RoomView
+            onLeave={leaveRoom}
+            channelName={connection.channelName}
+          />
         </LiveKitRoom>
       )}
 
