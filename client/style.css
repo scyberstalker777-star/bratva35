@@ -13,3 +13,22 @@ label{font-size:10px;letter-spacing:1.4px;color:#b7a9c9;font-weight:800}input{di
 footer{margin-top:auto;border-top:1px solid #ffffff16;padding-top:18px;display:flex;justify-content:space-between}
 .room{margin:50px auto;width:min(850px,100%);flex:1}.roomtop{display:flex;justify-content:space-between;align-items:center;color:#c9b8de;font-size:12px;letter-spacing:1px}.quiet,.leave{border:1px solid #ffffff25;background:#211a2d;color:white;border-radius:10px;padding:10px 14px}.tiles{height:360px;margin:22px 0}.controls{display:flex;justify-content:center;align-items:center;gap:15px;flex-wrap:wrap}.leave{background:#7c2fc1;border:0;padding:13px 20px}.lk-control-bar{background:#171321!important}
 @media(max-width:600px){.shell{padding:20px 18px}.status{font-size:8px}.joincard{grid-template-columns:1fr;padding:18px}.join{grid-column:1}.features{gap:12px}.tiles{height:55vh}footer{font-size:8px}}
+
+/* БРАТВА 35 — новый фон */
+body {
+  background:
+    linear-gradient(
+      rgba(8, 6, 18, 0.78),
+      rgba(8, 6, 18, 0.88)
+    ),
+    url('/background.jpg') center center / cover fixed no-repeat !important;
+  background-color: #080612;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.shell {
+  background: transparent !important;
+}
