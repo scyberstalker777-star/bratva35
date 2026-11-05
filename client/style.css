@@ -39,3 +39,64 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
+
+/* БРАТВА 35 — АУДИОНАСТРОЙКИ */
+
+.audio-settings {
+  width: 100%;
+  max-width: 520px;
+  margin: 28px auto;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  box-sizing: border-box;
+}
+
+.audio-settings h3 {
+  margin: 0 0 24px;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+}
+
+.audio-toggle,
+.audio-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+  color: #f6f3ff;
+  font-size: 13px;
+}
+
+.audio-toggle {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.audio-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #9565ff;
+}
+
+.audio-slider span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.audio-slider b {
+  color: #b99aff;
+}
+
+.audio-slider input {
+  width: 100%;
+  accent-color: #9565ff;
+  cursor: pointer;
+}
+
+.audio-slider input[type="range"] {
+  height: 6px;
+}
