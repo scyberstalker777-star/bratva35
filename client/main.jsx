@@ -4,12 +4,8 @@ import { createRoot } from 'react-dom/client';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
-  ControlBar,
-  GridLayout,
-  ParticipantTile,
-  useTracks
+  ControlBar
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
 import '@livekit/components-styles';
 import './style.css';
 
@@ -18,17 +14,6 @@ const API =
   (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 function RoomView({ onLeave }) {
-  const tracks = useTracks([
-    {
-      source: Track.Source.Camera,
-      with_placeholder: false
-    },
-    {
-      source: Track.Source.Microphone,
-      with_placeholder: true
-    }
-  ]);
-
   return (
     <section className="room">
       <div className="roomtop">
@@ -36,19 +21,17 @@ function RoomView({ onLeave }) {
           <span className="live"></span>
           ГОЛОСОВАЯ КОМНАТА
         </div>
+
         <button className="quiet" onClick={onLeave}>
           Покинуть
         </button>
       </div>
 
-      <GridLayout tracks={tracks} className="tiles">
-        {tracks.map((t) => (
-          <ParticipantTile
-            key={t.participant.identity}
-            trackRef={t}
-          />
-        ))}
-      </GridLayout>
+      <div className="room-content">
+        <h2>БРАТВА 35</h2>
+        <p>Ты находишься в голосовой комнате.</p>
+        <p>Подключай микрофон и общайся с братвой!</p>
+      </div>
 
       <RoomAudioRenderer />
 
@@ -61,6 +44,7 @@ function RoomView({ onLeave }) {
             leave: false
           }}
         />
+
         <button className="leave" onClick={onLeave}>
           Выйти из комнаты
         </button>
@@ -107,6 +91,11 @@ function App() {
     }
   }
 
+  function leaveRoom() {
+    setConnection(null);
+    setError('');
+  }
+
   return (
     <main className="shell">
       <header>
@@ -139,8 +128,8 @@ function App() {
           </h1>
 
           <p className="intro">
-            Залетай в комнату, подключай микрофон и
-            общайся с кентами хоть с компьютера,
+            Залетай в комнату, подключай микрофон
+            и общайся с кентами хоть с компьютера,
             хоть с iPhone.
           </p>
 
@@ -192,37 +181,31 @@ function App() {
         <LiveKitRoom
           token={connection.token}
           serverUrl={connection.url}
-          connect
-          audio
+          connect={true}
+          audio={true}
           video={false}
           onConnected={() => {
-            setError('');
+            console.log('LiveKit connected');
           }}
           onError={(err) => {
             console.error('LiveKit error:', err);
-            setError(
-              'Ошибка LiveKit: ' + err.message
-            );
+            setError('Ошибка LiveKit: ' + err.message);
             setConnection(null);
           }}
           onDisconnected={(reason) => {
+            console.log('LiveKit disconnected:', reason);
+            setConnection(null);
             setError(
               'Соединение прервано: ' +
               (reason || 'причина неизвестна')
             );
-            setConnection(null);
           }}
           onMediaDeviceFailure={(failure) => {
-            setError(
-              'Ошибка микрофона: ' + failure
-            );
+            console.error('Microphone error:', failure);
+            setError('Ошибка микрофона: ' + failure);
           }}
         >
-          <RoomView
-            onLeave={() => {
-              setConnection(null);
-            }}
-          />
+          <RoomView onLeave={leaveRoom} />
         </LiveKitRoom>
       )}
 
