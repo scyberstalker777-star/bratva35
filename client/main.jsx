@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
@@ -329,6 +328,72 @@ function RoomView({ onLeave, channelName }) {
   );
 }
 
+function OnlinePanel({ users }) {
+  return (
+    <div style={{
+      marginTop: '24px',
+      padding: '20px',
+      borderRadius: '14px',
+      background: 'rgba(255,255,255,0.045)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      textAlign: 'left'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px'
+      }}>
+        <strong style={{ fontSize: '15px', letterSpacing: '1px' }}>
+          БРАТВА 35 · СЕЙЧАС НА САЙТЕ
+        </strong>
+        <span style={{
+          color: '#55d68b',
+          fontWeight: 'bold',
+          fontSize: '14px',
+          whiteSpace: 'nowrap'
+        }}>
+          ● {users.length} онлайн
+        </span>
+      </div>
+
+      {users.length === 0 ? (
+        <p style={{ opacity: 0.65, margin: 0 }}>Пока никого нет</p>
+      ) : (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          {users.map(user => (
+            <div
+              key={user.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '9px',
+                background: 'rgba(255,255,255,0.04)'
+              }}
+            >
+              <span style={{ color: '#55d68b', fontSize: '12px' }}>●</span>
+              <span style={{ fontWeight: 600 }}>{user.name}</span>
+              <span style={{
+                marginLeft: 'auto',
+                fontSize: '11px',
+                opacity: 0.55
+              }}>
+                НА САЙТЕ
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('main');
@@ -337,6 +402,93 @@ function App() {
   const [connection, setConnection] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState([]);
+
+  const presenceIdRef = useRef(
+    globalThis.crypto?.randomUUID?.() ||
+    `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
+
+  const nameRef = useRef(name);
+  nameRef.current = name;
+
+  // Учёт посетителей сайта по введённому нику
+  useEffect(() => {
+    let stopped = false;
+    let registeredName = '';
+
+    const presenceId = presenceIdRef.current;
+
+    async function updatePresence() {
+      const currentName = nameRef.current.trim();
+
+      try {
+        if (!currentName) {
+          if (registeredName) {
+            await fetch(`${API}/presence/leave`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: presenceId })
+            });
+            registeredName = '';
+          }
+          return;
+        }
+
+        const endpoint = currentName === registeredName
+          ? '/presence/heartbeat'
+          : '/presence/join';
+
+        const response = await fetch(`${API}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            endpoint === '/presence/join'
+              ? { id: presenceId, name: currentName }
+              : { id: presenceId }
+          )
+        });
+
+        if (response.ok && endpoint === '/presence/join') {
+          registeredName = currentName;
+        }
+      } catch (err) {
+        console.error('Presence update error:', err);
+      }
+    }
+
+    async function loadOnlineUsers() {
+      try {
+        const response = await fetch(`${API}/presence`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!stopped) setOnlineUsers(data.users || []);
+      } catch (err) {
+        console.error('Presence list error:', err);
+      }
+    }
+
+    updatePresence();
+    loadOnlineUsers();
+
+    const presenceTimer = setInterval(updatePresence, 3000);
+    const listTimer = setInterval(loadOnlineUsers, 5000);
+
+    return () => {
+      stopped = true;
+      clearInterval(presenceTimer);
+      clearInterval(listTimer);
+
+      if (registeredName) {
+        fetch(`${API}/presence/leave`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: presenceId }),
+          keepalive: true
+        }).catch(() => {});
+      }
+    };
+  }, []);
 
   const selectedChannel = CHANNELS.find(item => item.id === room);
 
@@ -521,6 +673,8 @@ function App() {
 
             {error && <div className="error">{error}</div>}
           </form>
+
+          <OnlinePanel users={onlineUsers} />
 
           <div className="features">
             <span>● ГОЛОС В РЕАЛЬНОМ ВРЕМЕНИ</span>
