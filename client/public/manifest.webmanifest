@@ -1,0 +1,19 @@
+
+{
+  "name": "БРАТВА 35",
+  "short_name": "БРАТВА 35",
+  "description": "Голосовой чат для своей компании",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0a12",
+  "theme_color": "#0b0a12",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
