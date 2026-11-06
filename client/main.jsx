@@ -74,7 +74,7 @@ function ParticipantsPanel() {
   }, [room]);
 
   return (
-    <div style={{
+    <div className="participants-panel" style={{
       marginTop: '24px',
       padding: '20px',
       borderRadius: '14px',
@@ -289,25 +289,82 @@ function AudioSettings() {
 
 function RoomView({ onLeave, channelName }) {
   return (
-    <section className="room">
+    <section className="room room-modern">
+      <style>{`
+        .room-modern {
+          width: 100%;
+          max-width: 1040px;
+          margin: 26px auto;
+          padding: clamp(16px, 3vw, 30px);
+          box-sizing: border-box;
+          color: #f5f4fa;
+          background: radial-gradient(circle at 12% 0%, rgba(117, 75, 255, .17), transparent 34%), linear-gradient(145deg, #171522, #0e0d15 72%);
+          border: 1px solid rgba(255,255,255,.09);
+          border-radius: 24px;
+          box-shadow: 0 24px 80px rgba(0,0,0,.35);
+          text-align: left;
+        }
+        .room-modern .roomtop {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 0 20px;
+          border-bottom: 1px solid rgba(255,255,255,.09);
+          color: #a8a5b8;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+        }
+        .room-modern .roomtop > div { display:flex; align-items:center; gap:10px; }
+        .room-modern .live { width:9px; height:9px; display:inline-block; border-radius:50%; background:#55df9a; box-shadow:0 0 14px rgba(85,223,154,.8); }
+        .room-modern .quiet { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:#d8d5e4; border-radius:10px; padding:9px 13px; cursor:pointer; }
+        .room-modern .room-content { padding:30px 0 20px; text-align:center; }
+        .room-modern .room-content h2 { margin:0 0 9px; color:#fff; font-size:clamp(25px,4vw,36px); letter-spacing:2px; }
+        .room-modern .room-content p { margin:6px 0; color:#a9a5b8; }
+        .room-modern .room-content p:first-of-type { color:#b9a8ff; font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+        .room-modern .participants-panel { margin-top:12px !important; padding:20px !important; border-radius:18px !important; background:rgba(255,255,255,.035) !important; border:1px solid rgba(255,255,255,.085) !important; }
+        .room-modern .participants-panel strong { color:#e9e6f3; }
+        .room-modern .participants-panel > div:last-child > div { border:1px solid rgba(255,255,255,.055); transition:background .2s ease, transform .2s ease; }
+        .room-modern .participants-panel > div:last-child > div:hover { background:rgba(139,112,255,.12) !important; transform:translateY(-1px); }
+        .room-modern .audio-settings { margin-top:16px; padding:20px; border:1px solid rgba(255,255,255,.085); border-radius:18px; background:rgba(255,255,255,.035); color:#e9e6f3; }
+        .room-modern .audio-settings h3 { margin:0 0 18px; font-size:13px; letter-spacing:1.4px; color:#b9a8ff; }
+        .room-modern .audio-toggle, .room-modern .audio-slider { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:14px 0; color:#c9c6d5; font-size:13px; }
+        .room-modern .audio-slider { display:block; }
+        .room-modern .audio-slider span { display:flex; justify-content:space-between; margin-bottom:9px; }
+        .room-modern .audio-slider b { color:#fff; }
+        .room-modern .audio-slider input { width:100%; accent-color:#9b7cff; }
+        .room-modern .audio-toggle input { accent-color:#9b7cff; width:18px; height:18px; }
+        .room-modern .audio-status { margin-top:16px; padding-top:13px; border-top:1px solid rgba(255,255,255,.07); color:#63dba0; font-size:10px; font-weight:800; letter-spacing:1px; }
+        .room-modern .controls { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:14px; margin-top:20px; padding:16px; border-radius:18px; background:rgba(0,0,0,.22); }
+        .room-modern .controls [data-lk-theme] { --lk-control-bg: rgba(255,255,255,.1); }
+        .room-modern .leave { border:0; border-radius:12px; padding:13px 20px; background:linear-gradient(135deg,#8b5cf6,#6542d8); color:white; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(116,75,235,.25); }
+        .room-modern .leave:hover { filter:brightness(1.12); transform:translateY(-1px); }
+        @media (max-width:600px) {
+          .room-modern { margin:14px auto; border-radius:18px; }
+          .room-modern .participants-panel { padding:15px !important; }
+          .room-modern .audio-settings { padding:16px; }
+          .room-modern .controls { padding:12px; }
+        }
+      `}</style>
+
       <div className="roomtop">
         <div>
           <span className="live"></span>
-          ГОЛОСОВАЯ КОМНАТА
+          ВЫ В ЭФИРЕ · БРАТВА 35
         </div>
         <button className="quiet" onClick={onLeave}>
-          Покинуть
+          ← Выйти из комнаты
         </button>
       </div>
 
       <div className="room-content">
         <h2>БРАТВА 35</h2>
-        <p>Канал: {channelName}</p>
-        <p>Ты на связи со своей компанией!</p>
+        <p>{channelName}</p>
+        <p>Свои люди. Свой голос. Своя волна.</p>
       </div>
 
       <ParticipantsPanel />
-
       <AudioSettings />
       <RoomAudioRenderer />
 
@@ -321,12 +378,13 @@ function RoomView({ onLeave, channelName }) {
           }}
         />
         <button className="leave" onClick={onLeave}>
-          Выйти из комнаты
+          Завершить разговор
         </button>
       </div>
     </section>
   );
 }
+
 
 function OnlinePanel({ users }) {
   return (
@@ -403,12 +461,10 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
-
   const presenceIdRef = useRef(
     globalThis.crypto?.randomUUID?.() ||
     `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`
   );
-
   const nameRef = useRef(name);
   nameRef.current = name;
 
