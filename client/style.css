@@ -808,3 +808,130 @@ footer {
     transition-duration: .01ms !important;
   }
 }
+/* ===== BRATVA 35 ANIMATION ===== */
+
+body {
+  position: relative;
+  isolation: isolate;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 35%, rgba(168,121,255,.16), transparent 20%),
+    radial-gradient(circle at 75% 65%, rgba(112,64,196,.18), transparent 22%),
+    radial-gradient(circle at 50% 50%, rgba(199,167,255,.08), transparent 35%);
+  animation: cosmicMove 18s ease-in-out infinite alternate;
+}
+
+@keyframes cosmicMove {
+  0% {
+    transform: translate(-3%, -2%) scale(1);
+  }
+  100% {
+    transform: translate(3%, 2%) scale(1.12);
+  }
+}
+
+.hero h1 {
+  animation: neonPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes neonPulse {
+  from {
+    text-shadow: 0 0 15px rgba(168,121,255,.15);
+  }
+  to {
+    text-shadow:
+      0 0 20px rgba(168,121,255,.45),
+      0 0 55px rgba(168,121,255,.25);
+  }
+}
+
+.joincard {
+  position: relative;
+  overflow: hidden;
+  animation: cardFloat 6s ease-in-out infinite;
+}
+
+.joincard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d8baff, transparent);
+  animation: lightSweep 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes lightSweep {
+  0%, 35% {
+    left: -120%;
+  }
+  75%, 100% {
+    left: 150%;
+  }
+}
+
+@keyframes cardFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.brandmark {
+  animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  from {
+    box-shadow: 0 8px 25px rgba(145,86,232,.25);
+  }
+  to {
+    box-shadow:
+      0 0 25px rgba(168,121,255,.65),
+      0 0 50px rgba(145,86,232,.25);
+  }
+}
+
+.channel-card {
+  animation: cardAppear .6s ease both;
+}
+
+.channel-card:nth-child(2) {
+  animation-delay: .1s;
+}
+
+.channel-card:nth-child(3) {
+  animation-delay: .2s;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1,
+  .joincard,
+  .brandmark,
+  .channel-card,
+  body::after {
+    animation: none !important;
+  }
+}
