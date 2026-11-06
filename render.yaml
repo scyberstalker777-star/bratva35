@@ -1,3 +1,4 @@
+
 services:
   - type: web
     name: bratva35
@@ -9,6 +10,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - key: SERVE_CLIENT
+        value: "true"
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY
