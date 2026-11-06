@@ -72,15 +72,16 @@ body::after {
     radial-gradient(circle at 25% 35%, rgba(168,121,255,.19), transparent 20%),
     radial-gradient(circle at 75% 65%, rgba(112,64,196,.20), transparent 22%),
     radial-gradient(circle at 50% 50%, rgba(199,167,255,.09), transparent 35%);
-  animation: cosmicMove 18s ease-in-out infinite alternate;
+  animation: cosmicMove 45s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 @keyframes cosmicMove {
   from {
-    transform: translate(-3%, -2%) scale(1);
+    transform: translate(-2%, -1%) scale(1);
   }
   to {
-    transform: translate(3%, 2%) scale(1.12);
+    transform: translate(2%, 1%) scale(1.05);
   }
 }
 
@@ -140,7 +141,7 @@ header {
   background: linear-gradient(145deg, #b98aff, #7041c1);
   box-shadow: 0 8px 30px rgba(145, 86, 232, .34),
               inset 0 1px 0 rgba(255,255,255,.3);
-  animation: logoGlow 3s ease-in-out infinite alternate;
+  animation: logoGlow 4s ease-in-out infinite alternate;
 }
 
 @keyframes logoGlow {
@@ -149,8 +150,8 @@ header {
   }
   to {
     box-shadow:
-      0 0 25px rgba(168,121,255,.65),
-      0 0 50px rgba(145,86,232,.25);
+      0 0 25px rgba(168,121,255,.45),
+      0 0 40px rgba(145,86,232,.18);
   }
 }
 
@@ -197,13 +198,13 @@ header {
   border-radius: 50%;
   background: var(--green);
   box-shadow: 0 0 12px rgba(85, 230, 165, .8);
-  animation: statusPulse 2s ease-in-out infinite;
+  animation: statusPulse 3s ease-in-out infinite;
 }
 
 @keyframes statusPulse {
   50% {
-    box-shadow: 0 0 22px rgba(85,230,165,1);
-    opacity: .55;
+    box-shadow: 0 0 16px rgba(85,230,165,.8);
+    opacity: .7;
   }
 }
 
@@ -252,7 +253,7 @@ h1 {
   letter-spacing: -1.5px;
   color: #fff;
   text-shadow: 0 0 45px rgba(168, 121, 255, .2);
-  animation: neonPulse 4s ease-in-out infinite alternate;
+  animation: neonPulse 7s ease-in-out infinite alternate;
 }
 
 @keyframes neonPulse {
@@ -261,8 +262,8 @@ h1 {
   }
   to {
     text-shadow:
-      0 0 20px rgba(168,121,255,.55),
-      0 0 55px rgba(168,121,255,.3);
+      0 0 18px rgba(168,121,255,.4),
+      0 0 40px rgba(168,121,255,.2);
   }
 }
 
@@ -297,7 +298,7 @@ h1 span {
     0 0 55px rgba(125, 72, 205, .07),
     inset 0 1px 0 rgba(255,255,255,.055);
   backdrop-filter: blur(18px);
-  animation: cardFloat 6s ease-in-out infinite;
+  animation: none;
 }
 
 .joincard::before {
@@ -308,7 +309,7 @@ h1 span {
   width: 60%;
   height: 1px;
   background: linear-gradient(90deg, transparent, #d8baff, transparent);
-  animation: lightSweep 5s ease-in-out infinite;
+  animation: lightSweep 7s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -318,15 +319,6 @@ h1 span {
   }
   75%, 100% {
     left: 150%;
-  }
-}
-
-@keyframes cardFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
   }
 }
 
