@@ -40,6 +40,185 @@ const CHANNELS = [
   }
 ];
 
+/* ===== АНИМИРОВАННЫЙ ФОН ===== */
+
+function AnimatedBackground() {
+  return (
+    <>
+      <style>{`
+        .ambient-bg {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          overflow: hidden;
+          pointer-events: none;
+          background:
+            radial-gradient(
+              ellipse at 20% 30%,
+              rgba(111,65,255,.15),
+              transparent 45%
+            ),
+            radial-gradient(
+              ellipse at 80% 70%,
+              rgba(0,170,255,.10),
+              transparent 45%
+            );
+        }
+
+        .ambient-bg::before,
+        .ambient-bg::after {
+          content: "";
+          position: absolute;
+          width: 360px;
+          height: 360px;
+          border-radius: 50%;
+          filter: blur(90px);
+          opacity: .28;
+          animation: ambientMove 14s ease-in-out infinite alternate;
+          will-change: transform;
+        }
+
+        .ambient-bg::before {
+          background: #7845ff;
+          top: 5%;
+          left: -150px;
+        }
+
+        .ambient-bg::after {
+          background: #176bff;
+          bottom: 0;
+          right: -150px;
+          animation-delay: -7s;
+        }
+
+        .ambient-orb {
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #b99aff;
+          box-shadow: 0 0 14px 3px rgba(151,110,255,.65);
+          animation: particleFloat 9s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        .ambient-ring {
+          position: absolute;
+          width: 280px;
+          height: 280px;
+          border: 1px solid rgba(160,120,255,.13);
+          border-radius: 50%;
+          top: 48%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          box-shadow:
+            0 0 70px rgba(120,75,255,.09),
+            inset 0 0 70px rgba(120,75,255,.07);
+          animation: ringPulse 5s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        .ambient-ring::before,
+        .ambient-ring::after {
+          content: "";
+          position: absolute;
+          inset: 22px;
+          border: 1px solid rgba(120,160,255,.12);
+          border-radius: 50%;
+          animation: ringPulse 5s ease-in-out infinite reverse;
+        }
+
+        .ambient-ring::after {
+          inset: 48px;
+          animation-delay: -2s;
+        }
+
+        @keyframes ambientMove {
+          from {
+            transform: translate(0,0) scale(1);
+          }
+          to {
+            transform: translate(100px,70px) scale(1.3);
+          }
+        }
+
+        @keyframes particleFloat {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: .2;
+          }
+          50% {
+            transform: translateY(-45px);
+            opacity: .9;
+          }
+        }
+
+        @keyframes ringPulse {
+          0%, 100% {
+            opacity: .45;
+            transform: translate(-50%, -50%) scale(.94);
+          }
+          50% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+          }
+        }
+
+        .shell {
+          position: relative;
+          isolation: isolate;
+        }
+
+        .shell > :not(.ambient-bg) {
+          position: relative;
+          z-index: 1;
+        }
+
+        @media (max-width: 600px) {
+          .ambient-ring {
+            width: 220px;
+            height: 220px;
+          }
+
+          .ambient-bg::before,
+          .ambient-bg::after {
+            width: 260px;
+            height: 260px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ambient-bg *,
+          .ambient-bg::before,
+          .ambient-bg::after {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div className="ambient-bg">
+        <div className="ambient-ring"></div>
+
+        {Array.from({ length: 18 }, (_, i) => (
+          <span
+            key={i}
+            className="ambient-orb"
+            style={{
+              left: `${(i * 37 + 7) % 100}%`,
+              top: `${(i * 53 + 11) % 100}%`,
+              animationDelay: `${i * -0.7}s`,
+              animationDuration: `${7 + (i % 5)}s`,
+              opacity: 0.3 + (i % 5) * 0.12
+            }}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ===== УЧАСТНИКИ КОМНАТЫ ===== */
+
 function ParticipantsPanel() {
   const room = useRoomContext();
   const [participants, setParticipants] = useState([]);
@@ -145,6 +324,8 @@ function ParticipantsPanel() {
     </div>
   );
 }
+
+/* ===== НАСТРОЙКИ ЗВУКА ===== */
 
 function AudioSettings() {
   const room = useRoomContext();
@@ -287,6 +468,8 @@ function AudioSettings() {
   );
 }
 
+/* ===== ГОЛОСОВАЯ КОМНАТА ===== */
+
 function RoomView({ onLeave, channelName }) {
   return (
     <section className="room room-modern">
@@ -385,6 +568,7 @@ function RoomView({ onLeave, channelName }) {
   );
 }
 
+/* ===== ОНЛАЙН-ПАНЕЛЬ ===== */
 
 function OnlinePanel({ users }) {
   return (
@@ -452,6 +636,8 @@ function OnlinePanel({ users }) {
   );
 }
 
+/* ===== ГЛАВНОЕ ПРИЛОЖЕНИЕ ===== */
+
 function App() {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('main');
@@ -461,14 +647,15 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
+
   const presenceIdRef = useRef(
     globalThis.crypto?.randomUUID?.() ||
     `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`
   );
+
   const nameRef = useRef(name);
   nameRef.current = name;
 
-  // Учёт посетителей сайта по введённому нику
   useEffect(() => {
     let stopped = false;
     let registeredName = '';
@@ -601,6 +788,10 @@ function App() {
 
   return (
     <main className="shell">
+
+      {/* АНИМАЦИЯ ФОНА */}
+      <AnimatedBackground />
+
       <header>
         <div className="brandmark">
           Б<span>35</span>
