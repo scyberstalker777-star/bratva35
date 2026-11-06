@@ -8,7 +8,7 @@ import {
   useRoomContext,
   useLocalParticipant
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { Track, RoomEvent } from 'livekit-client';
 import { GainAudioProcessor } from '@livekit/track-processors';
 import '@livekit/components-styles';
 import './style.css';
@@ -40,6 +40,112 @@ const CHANNELS = [
     tag: 'RELAX'
   }
 ];
+
+function ParticipantsPanel() {
+  const room = useRoomContext();
+  const [participants, setParticipants] = useState([]);
+
+  useEffect(() => {
+    const updateParticipants = () => {
+      const all = [
+        room.localParticipant,
+        ...Array.from(room.remoteParticipants.values())
+      ];
+
+      setParticipants(
+        all.map(participant => ({
+          identity: participant.identity,
+          name: participant.name || participant.identity,
+          isLocal: participant.isLocal
+        }))
+      );
+    };
+
+    updateParticipants();
+
+    room.on(RoomEvent.ParticipantConnected, updateParticipants);
+    room.on(RoomEvent.ParticipantDisconnected, updateParticipants);
+    room.on(RoomEvent.ParticipantNameChanged, updateParticipants);
+
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, updateParticipants);
+      room.off(RoomEvent.ParticipantDisconnected, updateParticipants);
+      room.off(RoomEvent.ParticipantNameChanged, updateParticipants);
+    };
+  }, [room]);
+
+  return (
+    <div style={{
+      marginTop: '24px',
+      padding: '20px',
+      borderRadius: '14px',
+      background: 'rgba(255,255,255,0.045)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      textAlign: 'left'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px'
+      }}>
+        <strong style={{ fontSize: '15px', letterSpacing: '1px' }}>
+          УЧАСТНИКИ КОМНАТЫ
+        </strong>
+
+        <span style={{
+          color: '#55d68b',
+          fontWeight: 'bold',
+          fontSize: '14px'
+        }}>
+          ● {participants.length} онлайн
+        </span>
+      </div>
+
+      {participants.length === 0 ? (
+        <p>Пока никого нет</p>
+      ) : (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {participants.map(participant => (
+            <div
+              key={participant.identity}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '9px',
+                background: 'rgba(255,255,255,0.04)'
+              }}
+            >
+              <span style={{ color: '#55d68b', fontSize: '12px' }}>
+                ●
+              </span>
+
+              <span style={{ fontWeight: 600 }}>
+                {participant.name}
+              </span>
+
+              {participant.isLocal && (
+                <span style={{
+                  marginLeft: 'auto',
+                  fontSize: '11px',
+                  opacity: 0.55
+                }}>
+                  ЭТО ТЫ
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AudioSettings() {
   const room = useRoomContext();
@@ -200,6 +306,8 @@ function RoomView({ onLeave, channelName }) {
         <p>Канал: {channelName}</p>
         <p>Ты на связи со своей компанией!</p>
       </div>
+
+      <ParticipantsPanel />
 
       <AudioSettings />
       <RoomAudioRenderer />
