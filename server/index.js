@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
+import { AccessToken } from 'livekit-server-sdk';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
@@ -12,73 +12,93 @@ dotenv.config();
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(__dirname, '../client/dist');
+
 const allowedOrigin = process.env.CLIENT_ORIGIN;
 
 app.use(cors(allowedOrigin ? { origin: allowedOrigin } : {}));
 app.use(express.json({ limit: '20kb' }));
 
+// ===================================
+// БРАТВА 35 — ОНЛАЙН ПОСЕТИТЕЛИ
+// ===================================
+
+const onlineUsers = new Map();
+
+function cleanOnlineUsers() {
+  const now = Date.now();
+
+  for (const [id, user] of onlineUsers) {
+    if (now - user.lastSeen > 45000) {
+      onlineUsers.delete(id);
+    }
+  }
+}
+
+// Вход на сайт
+app.post('/presence/join', (req, res) => {
+  const id = String(req.body?.id || '').slice(0, 80);
+  const name = String(req.body?.name || '').trim().slice(0, 24);
+
+  if (!id || !name) {
+    return res.status(400).json({ error: 'Укажи ID и никнейм' });
+  }
+
+  onlineUsers.set(id, {
+    name,
+    lastSeen: Date.now()
+  });
+
+  res.json({ ok: true });
+});
+
+// Обновление присутствия
+app.post('/presence/heartbeat', (req, res) => {
+  const id = String(req.body?.id || '');
+  const user = onlineUsers.get(id);
+
+  if (user) {
+    user.lastSeen = Date.now();
+  }
+
+  res.json({ ok: true });
+});
+
+// Выход с сайта
+app.post('/presence/leave', (req, res) => {
+  const id = String(req.body?.id || '');
+
+  onlineUsers.delete(id);
+
+  res.json({ ok: true });
+});
+
+// Получение списка посетителей
+app.get('/presence', (_req, res) => {
+  cleanOnlineUsers();
+
+  const users = Array.from(onlineUsers.entries()).map(([id, user]) => ({
+    id,
+    name: user.name
+  }));
+
+  res.json({
+    count: users.length,
+    users
+  });
+});
+
+// ===================================
+// LIVEKIT — ГОЛОСОВЫЕ КОМНАТЫ
+// ===================================
+
 app.get('/health', (_req, res) => {
   res.json({ ok: true, app: 'БРАТВА 35' });
 });
 
-// Список активных комнат и участников
-app.get('/rooms', async (_req, res) => {
-  try {
-    if (
-      !process.env.LIVEKIT_API_KEY ||
-      !process.env.LIVEKIT_API_SECRET ||
-      !process.env.LIVEKIT_URL
-    ) {
-      return res.status(503).json({ error: 'LiveKit не настроен.' });
-    }
-
-    const roomService = new RoomServiceClient(
-      process.env.LIVEKIT_URL,
-      process.env.LIVEKIT_API_KEY,
-      process.env.LIVEKIT_API_SECRET
-    );
-
-    const knownRooms = ['main', 'dota2', 'chill'];
-    const activeRooms = await roomService.listRooms();
-    const activeNames = activeRooms.map(room => room.name);
-    const allNames = [...new Set([...knownRooms, ...activeNames])];
-
-    const rooms = await Promise.all(
-      allNames.map(async name => {
-        const exists = activeNames.includes(name);
-
-        if (!exists) {
-          return {
-            name,
-            count: 0,
-            participants: []
-          };
-        }
-
-        const participants = await roomService.listParticipants(name);
-
-        return {
-          name,
-          count: participants.length,
-          participants: participants.map(person => ({
-            identity: person.identity,
-            name: person.name || person.identity
-          }))
-        };
-      })
-    );
-
-    res.json({ rooms });
-  } catch (error) {
-    console.error('Rooms error:', error);
-    res.status(500).json({ error: 'Не удалось получить список комнат.' });
-  }
-});
-
-// Выдача токена для входа
 app.post('/token', async (req, res) => {
   try {
     const name = String(req.body?.name || '').trim().slice(0, 24);
+
     const room = String(req.body?.room || '')
       .trim()
       .toLowerCase()
@@ -86,7 +106,9 @@ app.post('/token', async (req, res) => {
       .slice(0, 40);
 
     if (!name || !room) {
-      return res.status(400).json({ error: 'Укажи имя и комнату.' });
+      return res.status(400).json({
+        error: 'Укажи имя и комнату.'
+      });
     }
 
     if (
@@ -124,19 +146,29 @@ app.post('/token', async (req, res) => {
       token: await token.toJwt(),
       url: process.env.LIVEKIT_URL
     });
+
   } catch (error) {
     console.error('Token error:', error);
+
     res.status(500).json({
       error: 'Не удалось подготовить подключение.'
     });
   }
 });
 
+// ===================================
+// РАЗДАЧА САЙТА
+// ===================================
+
 if (process.env.SERVE_CLIENT !== 'false') {
   app.use(express.static(clientDist));
 
   app.get('*', (req, res, next) => {
-    if (req.path === '/token' || req.path === '/health' || req.path === '/rooms') {
+    if (
+      req.path === '/token' ||
+      req.path === '/health' ||
+      req.path.startsWith('/presence')
+    ) {
       return next();
     }
 
